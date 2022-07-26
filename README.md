@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-# BSMReceiver
-BSM Receiver for Autocrypt
-=======
 easywsclient
 ============
 
@@ -140,4 +136,3 @@ Future Work
 * Parameterize the `pointer` type (especially for `shared_ptr`).
 * Support optional integration on top of an async (event-driven) library,
   especially Asio.
->>>>>>> master
