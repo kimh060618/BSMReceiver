@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "iostream": "cpp",
+        "string": "cpp",
+        "tuple": "cpp",
+        "chrono": "cpp",
+        "ostream": "cpp",
+        "queue": "cpp"
+    }
+}
