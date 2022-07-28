@@ -5,6 +5,7 @@
         "tuple": "cpp",
         "chrono": "cpp",
         "ostream": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "vector": "cpp"
     }
 }
