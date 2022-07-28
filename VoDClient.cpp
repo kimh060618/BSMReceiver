@@ -266,7 +266,7 @@ int main(int argc, char **argv)
                 cout << "Third Quantile: " << quartiles_lv1[2] << endl;
                 cout << "--------------------------------------------------------------" << "\n";
 
-                auto quartiles_lv2 = Quantile<uint64_t>(data_lv1, { 0.25, 0.5, 0.75 });
+                auto quartiles_lv2 = Quantile<uint64_t>(data_lv2, { 0.25, 0.5, 0.75 });
                 cout << "---------------- Lv2 Mean Time & Failure Rate ----------------" << "\n";
                 cout << "Number of Message: " << num_msg_lv2 << "\n";
                 cout << "Mean Time: " << mean_lv2 << "\n";
@@ -278,7 +278,7 @@ int main(int argc, char **argv)
                 cout << "Third Quantile: " << quartiles_lv2[2] << endl;
                 cout << "--------------------------------------------------------------" << "\n";
                 
-                auto quartiles_lv3 = Quantile<uint64_t>(data_lv1, { 0.25, 0.5, 0.75 });
+                auto quartiles_lv3 = Quantile<uint64_t>(data_lv3, { 0.25, 0.5, 0.75 });
                 cout << "---------------- Lv3 Mean Time & Failure Rate ----------------" << "\n";
                 cout << "Number of Message: " << num_msg_lv3 << "\n";
                 cout << "Mean Time: " << mean_lv3 << "\n";
@@ -290,7 +290,7 @@ int main(int argc, char **argv)
                 cout << "Third Quantile: " << quartiles_lv3[2] << endl;
                 cout << "--------------------------------------------------------------" << "\n";
 
-                auto quartiles_lv4 = Quantile<uint64_t>(data_lv1, { 0.25, 0.5, 0.75 });
+                auto quartiles_lv4 = Quantile<uint64_t>(data_lv4, { 0.25, 0.5, 0.75 });
                 cout << "---------------- Lv4 Mean Time & Failure Rate ----------------" << "\n";
                 cout << "Number of Message: " << num_msg_lv4 << "\n";
                 cout << "Mean Time: " << mean_lv4 << "\n";
