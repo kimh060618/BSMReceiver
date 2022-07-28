@@ -103,7 +103,7 @@ static inline std::vector<T> Quantile(const std::vector<T>& inData, const std::v
 
     for (size_t i = 0; i < probs.size(); ++i)
     {
-        T poi = Lerp<T>(-0.5, data.size() - 0.5, probs[i]);
+        T poi = Lerp<double>(-0.5, data.size() - 0.5, probs[i]);
 
         size_t left = std::max(int64_t(std::floor(poi)), int64_t(0));
         size_t right = std::min(int64_t(std::ceil(poi)), int64_t(data.size() - 1));
@@ -111,7 +111,7 @@ static inline std::vector<T> Quantile(const std::vector<T>& inData, const std::v
         T datLeft = data.at(left);
         T datRight = data.at(right);
 
-        T quantile = Lerp<T>(datLeft, datRight, poi - left);
+        T quantile = Lerp<double>(datLeft, datRight, poi - left);
 
         quantiles.push_back(quantile);
     }
