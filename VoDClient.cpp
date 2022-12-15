@@ -21,6 +21,7 @@
 using namespace std;
 using namespace easywsclient;
 typedef pair<int, pair<int, uint64_t>> pp;
+typedef queue<pair<int, uint64_t>> bq;
 
 struct cmp{
     bool operator()(pp t, pp u){
@@ -59,9 +60,9 @@ uint64_t micros()
 double min(double a, uint64_t b) { return a < b ? a : b; }
 double max(double a, uint64_t b) { return a > b ? a : b; }
 
-void PrintLevelLog(int type, int level, uint64_t msgTime, int &num_msg, double &mean_val, double &std_val, double &max_val, double &min_val, vector<uint64_t> &data)
+void PrintLevelLog(uint64_t msgTime, int &num_msg, double &mean_val, double &std_val, double &max_val, double &min_val, vector<uint64_t> &data)
 {
-    cout << "-------------- Message Level: " << -1 * level << " --------------" << "\n";
+    cout << "----------------------------------------------" << "\n";
     cout << "(msec) >>> " << micros() << "\n";
     cout << "(TimeStamp) >>> " << msgTime << "\n";
     uint64_t diffTime = micros() - msgTime;
@@ -117,6 +118,30 @@ static inline std::vector<T> Quantile(const std::vector<T>& inData, const std::v
     return quantiles;
 }
 
+void popNextElement(bq lv1, bq lv2, bq lv3, bq lv4, uint64_t t, int lv) 
+{
+    if (!lv1.empty()) {
+        t = lv1.front().second;
+        lv1.pop();
+        lv = 1;
+    } else if (!lv2.empty()){
+        t = lv2.front().second;
+        lv2.pop();
+        lv = 2;
+    } else if (!lv3.empty()){
+        t = lv3.front().second;
+        lv3.pop();
+        lv = 3;
+    } else if (!lv4.empty()){
+        t = lv4.front().second;
+        lv4.pop();
+        lv = 4;
+    } else {
+        t = 0;
+        lv = -1;
+    }
+}
+
 int main(int argc, char **argv)
 {
     ios::sync_with_stdio(0);
@@ -126,9 +151,7 @@ int main(int argc, char **argv)
     unique_ptr<WebSocket> ws(WebSocket::from_url("ws://localhost:3000/bsm"));
     assert(ws);
 
-    int enablePQ = argv[1][0] - '0';
-    priority_queue<pp, vector<pp>, cmp> pq;
-    queue<pp> q;
+    bq q_lv1, q_lv2, q_lv3, q_lv4;
     uint64_t start_time = micros();
 
     int num_msg_lv1 = 0;
@@ -157,100 +180,51 @@ int main(int argc, char **argv)
         WebSocket::pointer wsp = &*ws; // <-- because a unique_ptr cannot be copied into a lambda
         uint64_t _t = micros();
         ws->poll();
-        ws->dispatch([&, wsp, enablePQ](const std::string & message) { // 
+        ws->dispatch([&, wsp](const std::string & message) {
             int type, level;
             string time;
-            // PrintLog(message);
+
             SimpleParser(message, type, level, time);
             uint64_t t = micros();
             uint64_t timeUnix = stol(time);
             if (num_msg_lv3 <= MEAN_NUM) {
-                if (!enablePQ) {
-                    if (q.size() < MAX_QUEUE) q.push({ -1 * level, { -1 * type, timeUnix } });
-                    else {
-                        switch (level)
-                        {
-                        case 1:
-                            num_msg_lv1++;
-                            num_fail_lv1 ++;
-                        break;
-                        case 2:
-                            num_msg_lv2++;
-                            num_fail_lv2 ++;
-                        break;
-                        case 3:
-                            num_msg_lv3++;
-                            num_fail_lv3 ++;
-                        break;
-                        case 4:
-                            num_msg_lv4++;
-                            num_fail_lv4 ++;
-                        break;
-                        }
-                    }
-                }
-                else { 
-                    if (pq.size() < MAX_QUEUE) pq.push({ -1 * level, { -1 * type, timeUnix } }); 
-                    else {
-                        switch (level)
-                        {
-                        case 1:
-                            num_msg_lv1++;
-                            num_fail_lv1 ++;
-                        break;
-                        case 2:
-                            num_msg_lv2++;
-                            num_fail_lv2 ++;
-                        break;
-                        case 3:
-                            num_msg_lv3++;
-                            num_fail_lv3 ++;
-                        break;
-                        case 4:
-                            num_msg_lv4++;
-                            num_fail_lv4 ++;
-                        break;
-                        }
-                    }
+                switch (level)
+                {
+                case 1:
+                    q_lv1.push({level, timeUnix});
+                    break;
+                case 2:
+                    q_lv2.push({level, timeUnix});
+                    break;
+                case 3:
+                    q_lv3.push({level, timeUnix});
+                    break;
+                case 4:
+                    q_lv4.push({level, timeUnix});
+                    break;
+                default:
+                    break;
                 }
             }
 
             if  (_t - start_time > TIME_DELTA) {
-                if (enablePQ) {
-                    int cnt = 0;
-                    cout << pq.size() << endl;
-                    while (cnt < POP_NUM && !pq.empty()) 
-                    {
-                        int level = pq.top().first;
-                        int type = pq.top().second.first;
-                        uint64_t msgTime = pq.top().second.second;
-                        pq.pop();
-                        cnt ++;
-                        if (level == -1) PrintLevelLog(type, level, msgTime, num_msg_lv1, mean_lv1, std_lv1, max_lv1, min_lv1, data_lv1);
-                        if (level == -2) PrintLevelLog(type, level, msgTime, num_msg_lv2, mean_lv2, std_lv2, max_lv2, min_lv2, data_lv2);
-                        if (level == -3) PrintLevelLog(type, level, msgTime, num_msg_lv3, mean_lv3, std_lv3, max_lv3, min_lv3, data_lv3);
-                        if (level == -4) PrintLevelLog(type, level, msgTime, num_msg_lv4, mean_lv4, std_lv4, max_lv4, min_lv4, data_lv4);
-                    }
-                }
-                else {
-                    int cnt = 0;
-                    cout << q.size() << endl;
-                    while (cnt < POP_NUM && !q.empty()) 
-                    {
-                        int level = q.front().first;
-                        int type = q.front().second.first;
-                        uint64_t msgTime = q.front().second.second;
-                        q.pop();
-                        cnt ++;
-                        if (level == -1) PrintLevelLog(type, level, msgTime, num_msg_lv1, mean_lv1, std_lv1, max_lv1, min_lv1, data_lv1);
-                        if (level == -2) PrintLevelLog(type, level, msgTime, num_msg_lv2, mean_lv2, std_lv2, max_lv2, min_lv2, data_lv2);
-                        if (level == -3) PrintLevelLog(type, level, msgTime, num_msg_lv3, mean_lv3, std_lv3, max_lv3, min_lv3, data_lv3);
-                        if (level == -4) PrintLevelLog(type, level, msgTime, num_msg_lv4, mean_lv4, std_lv4, max_lv4, min_lv4, data_lv4);
-                    }
+                int cnt = 0;
+                uint64_t timestamp;
+                int lv;
+                popNextElement(q_lv1, q_lv2, q_lv3, q_lv4, timestamp, lv);
+                while (cnt < POP_NUM && timestamp != 0) 
+                {
+                    cnt ++;
+                    if (lv == 1) PrintLevelLog(timestamp, num_msg_lv1, mean_lv1, std_lv1, max_lv1, min_lv1, data_lv1);
+                    if (lv == 2) PrintLevelLog(timestamp, num_msg_lv2, mean_lv2, std_lv2, max_lv2, min_lv2, data_lv2);
+                    if (lv == 3) PrintLevelLog(timestamp, num_msg_lv3, mean_lv3, std_lv3, max_lv3, min_lv3, data_lv3);
+                    if (lv == 4) PrintLevelLog(timestamp, num_msg_lv4, mean_lv4, std_lv4, max_lv4, min_lv4, data_lv4);
+                    popNextElement(q_lv1, q_lv2, q_lv3, q_lv4, timestamp, lv);
                 }
                 start_time = _t;
             }
-            if (num_msg_lv2 >= MEAN_NUM || ((enablePQ && pq.empty()) || (!enablePQ && q.empty()))) {
+
+            if (num_msg_lv2 >= MEAN_NUM) {
 
                 auto quartiles_lv1 = Quantile<uint64_t>(data_lv1, { 0.25, 0.5, 0.75 });
                 cout << "---------------- Lv1 Mean Time & Failure Rate ----------------" << "\n";
