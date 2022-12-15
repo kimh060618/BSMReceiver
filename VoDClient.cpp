@@ -5,6 +5,7 @@
 #include <string>
 #include <memory>
 #include <ctime>
+#include <time.h>
 #include <chrono>
 #include <sys/time.h>
 #include <queue>
@@ -20,18 +21,7 @@
 
 using namespace std;
 using namespace easywsclient;
-typedef pair<int, pair<int, uint64_t>> pp;
 typedef queue<pair<int, uint64_t>> bq;
-
-struct cmp{
-    bool operator()(pp t, pp u){
-        if (t.first == u.first) {
-            if (t.second.first == u.second.first) return t.second.second > u.second.second;
-            else return t.second.first < t.second.first;
-        }
-        return t.first < u.first;
-    }
-};
 
 void PrintLog(string message) 
 {
@@ -51,8 +41,9 @@ void SimpleParser(string message, int &type, int &level, string &timestamp)
 
 uint64_t micros()
 {
+    using namespace std::chrono;
     uint64_t us = std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::high_resolution_clock::now().time_since_epoch())
+            system_clock::now().time_since_epoch())
             .count();
     return us; 
 }
@@ -104,8 +95,8 @@ static inline std::vector<T> Quantile(const std::vector<T>& inData, const std::v
     {
         T poi = Lerp<double>(-0.5, data.size() - 0.5, probs[i]);
 
-        size_t left = std::max(int64_t(std::floor(poi)), int64_t(0));
-        size_t right = std::min(int64_t(std::ceil(poi)), int64_t(data.size() - 1));
+        size_t left = std::max(int64_t(floor(poi)), int64_t(0));
+        size_t right = std::min(int64_t(ceil(poi)), int64_t(data.size() - 1));
 
         T datLeft = data.at(left);
         T datRight = data.at(right);
@@ -118,7 +109,7 @@ static inline std::vector<T> Quantile(const std::vector<T>& inData, const std::v
     return quantiles;
 }
 
-void popNextElement(bq lv1, bq lv2, bq lv3, bq lv4, uint64_t t, int lv) 
+void popNextElement(bq &lv1, bq &lv2, bq &lv3, bq &lv4, uint64_t &t, int &lv) 
 {
     if (!lv1.empty()) {
         t = lv1.front().second;
@@ -202,8 +193,6 @@ int main(int argc, char **argv)
                 case 4:
                     q_lv4.push({level, timeUnix});
                     break;
-                default:
-                    break;
                 }
             }
 
@@ -212,7 +201,7 @@ int main(int argc, char **argv)
                 uint64_t timestamp;
                 int lv;
                 popNextElement(q_lv1, q_lv2, q_lv3, q_lv4, timestamp, lv);
-                while (cnt < POP_NUM && timestamp != 0) 
+                while (cnt < POP_NUM && !(q_lv1.empty() && q_lv2.empty() && q_lv3.empty() && q_lv4.empty())) 
                 {
                     cnt ++;
                     if (lv == 1) PrintLevelLog(timestamp, num_msg_lv1, mean_lv1, std_lv1, max_lv1, min_lv1, data_lv1);
