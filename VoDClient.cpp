@@ -59,8 +59,6 @@ uint64_t micros()
 double min(double a, uint64_t b) { return a < b ? a : b; }
 double max(double a, uint64_t b) { return a > b ? a : b; }
 
-
-
 void PrintLevelLog(int type, int level, uint64_t msgTime, int &num_msg, double &mean_val, double &std_val, double &max_val, double &min_val, vector<uint64_t> &data)
 {
     cout << "-------------- Message Level: " << -1 * level << " --------------" << "\n";
