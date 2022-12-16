@@ -133,6 +133,12 @@ void popNextElement(bq &lv1, bq &lv2, bq &lv3, bq &lv4, uint64_t &t, int &lv)
     }
 }
 
+bool isEmpty(bq &lv1, bq &lv2, bq &lv3, bq &lv4) 
+{
+    if (lv1.empty() && lv2.empty() && lv3.empty() && lv4.empty()) return true;
+    else return false;
+}
+
 int main(int argc, char **argv)
 {
     ios::sync_with_stdio(0);
@@ -201,7 +207,7 @@ int main(int argc, char **argv)
                 uint64_t timestamp;
                 int lv;
                 popNextElement(q_lv1, q_lv2, q_lv3, q_lv4, timestamp, lv);
-                while (cnt < POP_NUM && !(q_lv1.empty() && q_lv2.empty() && q_lv3.empty() && q_lv4.empty())) 
+                while (cnt < POP_NUM) 
                 {
                     cnt ++;
                     if (lv == 1) PrintLevelLog(timestamp, num_msg_lv1, mean_lv1, std_lv1, max_lv1, min_lv1, data_lv1);
@@ -213,7 +219,7 @@ int main(int argc, char **argv)
                 start_time = _t;
             }
 
-            if (num_msg_lv2 >= MEAN_NUM) {
+            if (num_msg_lv3 >= MEAN_NUM) {
 
                 auto quartiles_lv1 = Quantile<uint64_t>(data_lv1, { 0.25, 0.5, 0.75 });
                 cout << "---------------- Lv1 Mean Time & Failure Rate ----------------" << "\n";
